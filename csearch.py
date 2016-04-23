@@ -73,7 +73,7 @@ class CsearchCommand(sublime_plugin.WindowCommand, _CsearchListener):
                             view=view, erase=True)
         view.set_status('YetAnotherCodeSearch', 'Searching...')
         try:
-            s = settings.get_project_settings(self.window.project_data())
+            s = settings.get_project_settings(self.window.project_data(), self.window.project_file_name())
             _CsearchThread(parser.parse_query(result), self,
                            path_csearch=s.csearch_path,
                            index_filename=s.index_filename).start()
@@ -133,10 +133,12 @@ class CsearchCommand(sublime_plugin.WindowCommand, _CsearchListener):
         view.set_read_only(True)
 
     def on_finished(self, output, err=None):
+        print('on_finished', output)
         matches = None
         if output:
             try:
                 matches = parser.parse_search_output(output)
+                print("matches", matches)
             except Exception as e:
                 err = e
         sublime.set_timeout(

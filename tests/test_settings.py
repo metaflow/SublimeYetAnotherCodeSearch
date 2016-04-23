@@ -14,6 +14,7 @@ class GetProjectSettingsTest(unittest.TestCase):
             'folders': [
                 {'path': '~/bar'},
                 {'path': '~/foo'}]}
+        self.project_file_name = '~/test.project'
 
     @patch('os.path.abspath', autospec=True)
     @patch('os.path.expanduser', autospec=True)
@@ -25,6 +26,7 @@ class GetProjectSettingsTest(unittest.TestCase):
         mock_isfile.return_value = True
 
         s = settings.get_project_settings(self.project_data,
+                                          self.project_file_name,
                                           index_project_folders=True)
         self.assertEquals(s.paths_to_index, ['/abs/home/you/bar',
                                              '/abs/home/you/foo'])
@@ -51,6 +53,7 @@ class GetProjectSettingsTest(unittest.TestCase):
 
         del self.project_data['code_search']
         s = settings.get_project_settings(self.project_data,
+                                          self.project_file_name,
                                           index_project_folders=True)
         self.assertEquals(s.paths_to_index, ['/abs/home/you/bar',
                                              '/abs/home/you/foo'])

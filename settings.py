@@ -41,7 +41,7 @@ class Settings(object):
                         self.index_filename, self.paths_to_index)
 
 
-def get_project_settings(project_data, index_project_folders=False):
+def get_project_settings(project_data, project_file_name, index_project_folders=False):
     """Gets the Code Search settings for the current project.
 
     Args:
@@ -54,23 +54,31 @@ def get_project_settings(project_data, index_project_folders=False):
         Exception: If an index file was set, but it doesn't exist or if the
             index file is missing.
     """
+    print("get_project_settings", project_data, project_file_name)
     settings = sublime.load_settings('YetAnotherCodeSearch.sublime-settings')
     path_cindex = settings.get('path_cindex')
     path_csearch = settings.get('path_csearch')
     index_filename = None
     paths_to_index = []
+    project_dir = os.path.dirname(project_file_name)
     if ('code_search' in project_data and
             'csearchindex' in project_data['code_search']):
-        raw_index_filename = project_data['code_search']['csearchindex']
-        index_filename = os.path.abspath(
-            os.path.expanduser(raw_index_filename))
-        if not os.path.isfile(index_filename) and not index_project_folders:
-            raise Exception(
-                'The index file, {}, does not exist'.format(index_filename))
+        index_filename = project_data['code_search']['csearchindex']
+        index_filename = os.path.expanduser(index_filename)
+        if not os.path.isabs(index_filename):
+            index_filename = os.path.join(project_dir, index_filename)
+        print("index_filename", index_filename)
+        # if not os.path.isfile(index_filename) and not index_project_folders:
+        #     raise Exception(
+        #         'The index file, {}, does not exist'.format(index_filename))
 
     if index_project_folders:
-        paths_to_index = [os.path.abspath(os.path.expanduser(folder['path']))
-                          for folder in project_data['folders']]
+        print("project_dir", project_dir)
+        for folder in project_data['folders']:
+            path = os.path.expanduser(folder['path'])
+            if not os.path.isabs(path):
+                path = os.path.join(project_dir, path)
+            paths_to_index.append(path)
 
     return Settings(path_csearch, path_cindex,
                     index_filename=index_filename,

@@ -44,6 +44,7 @@ class CindexCommand(sublime_plugin.WindowCommand, _CindexListener):
         self._is_running = False
 
     def run(self, index_project=False):
+        print("CindexCommand.run")
         """Runs the cindex command.
 
         Once this starts running, it will not listen to other calls until the
@@ -64,6 +65,7 @@ class CindexCommand(sublime_plugin.WindowCommand, _CindexListener):
         try:
             s = settings.get_project_settings(
                 self.window.project_data(),
+                self.window.project_file_name(),
                 index_project_folders=index_project)
             _CindexListThread(self,
                               path_cindex=s.cindex_path,
@@ -140,14 +142,17 @@ class _CindexListThread(threading.Thread):
     def _start_indexing(self):
         cmd = [self._path_cindex, '-verbose']
         if self._paths_to_index:
-            cmd.append('-reset')
+            # cmd.append('-reset')
             cmd.extend(self._paths_to_index)
         proc = self._get_proc(cmd)
+        overall_start = time.time()
         start = time.time()
         count = 0
+        # lines = []
         for line in iter(proc.stdout.readline, b''):
             if _FILE_LINE_RE.match(line.decode('utf-8')):
                 count += 1
+            # lines.append(line.decode('utf-8'))
             # Call the listener every so often with an update on what was
             # processed.
             tick = time.time()
@@ -156,8 +161,10 @@ class _CindexListThread(threading.Thread):
                 count = 0
                 start = tick
         self._listener.on_files_processed(count)
+        print(time.time() - overall_start)
         proc.stdout.close()
         retcode = proc.poll()
         if retcode:
+            # print(lines[-10:])
             error = subprocess.CalledProcessError(retcode, cmd)
             raise error
