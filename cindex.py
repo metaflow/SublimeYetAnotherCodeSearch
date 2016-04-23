@@ -70,7 +70,8 @@ class CindexCommand(sublime_plugin.WindowCommand, _CindexListener):
             _CindexListThread(self,
                               path_cindex=s.cindex_path,
                               index_filename=s.index_filename,
-                              paths_to_index=s.paths_to_index).start()
+                              paths_to_index=s.paths_to_index,
+                              paths_to_exclude=s.paths_to_exclude).start()
         except Exception as e:
             self._finish(err=e)
 
@@ -102,7 +103,7 @@ class _CindexListThread(threading.Thread):
     """Runs the cindex command in a thread."""
 
     def __init__(self, listener, path_cindex='cindex', index_filename=None,
-                 paths_to_index=None):
+                 paths_to_index=None, paths_to_exclude=None):
         """Initializes the _CindexListThread.
 
         Args:
@@ -111,13 +112,14 @@ class _CindexListThread(threading.Thread):
             index_filename: An optional csearchindex file location to use.
             paths_to_index: An optional list of paths to index. If supplied,
                 replaces the paths currently used in the csearchindex file.
+            TODO(metaflow)
         """
         super(_CindexListThread, self).__init__()
         self._listener = listener
         self._path_cindex = path_cindex
         self._index_filename = index_filename
         self._paths_to_index = paths_to_index or []
-
+        self._paths_to_exclude = paths_to_exclude or []
     def run(self):
         try:
             self._start_indexing()
@@ -141,9 +143,13 @@ class _CindexListThread(threading.Thread):
 
     def _start_indexing(self):
         cmd = [self._path_cindex, '-verbose']
+        for exclude in self._paths_to_exclude:
+            cmd.append('--exclude')
+            cmd.append(exclude)
         if self._paths_to_index:
-            # cmd.append('-reset')
+            cmd.append('-reset') #TODO(metaflow) if no file
             cmd.extend(self._paths_to_index)
+        print("cmd", cmd)
         proc = self._get_proc(cmd)
         overall_start = time.time()
         start = time.time()
