@@ -10,6 +10,7 @@ import threading
 
 from YetAnotherCodeSearch import parser
 from YetAnotherCodeSearch import settings
+from YetAnotherCodeSearch.mouse_event_listener import MouseEventListener
 
 
 class _CsearchListener(object):
@@ -219,3 +220,14 @@ class CodeSearchResultsGoToFileCommand(sublime_plugin.WindowCommand):
         self.window.open_file('{0}:{1}:{2}'.format(filename, linenum, col),
                               sublime.ENCODED_POSITION)
         # TODO(pope): Consider highlighting the match
+
+class MouseEventProcessor(mouse_event_listener.MouseEventListener):
+    def on_pre_mouse_down(self, view, args):
+        if not 'by' in args:
+            return
+        if args['by'] != 'words':
+            return
+        print("on pre-click > ", args)
+        view.window().run_command("code_search_results_go_to_file")
+    # def on_post_mouse_down(self, point):
+        # print( "on post-click > ", point)
