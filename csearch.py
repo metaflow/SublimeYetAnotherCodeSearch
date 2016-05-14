@@ -5,6 +5,8 @@ import bisect
 import functools
 import operator
 import os
+import platform
+import re
 import subprocess
 import threading
 
@@ -145,6 +147,16 @@ class CsearchCommand(sublime_plugin.WindowCommand, _CsearchListener):
         sublime.set_timeout(
             functools.partial(self._finish, output, matches, err=err))
 
+def fix_windows_output(output):
+    result = []
+    # replace ntpaths to posix
+    r = re.compile(r"^([^:]*):([^:]*):([^:]*):(.*)$")
+    for line in output.splitlines():
+        m = r.match(line)
+        if m:
+            line = ('/%s%s:%s:%s' % (m.group(1), m.group(2).replace('\\','/'), m.group(3), m.group(4)))
+        result.append(line)
+    return '\n'.join(result)
 
 class _CsearchThread(threading.Thread):
     """Runs the csearch command in a thread."""
@@ -185,7 +197,10 @@ class _CsearchThread(threading.Thread):
             error = subprocess.CalledProcessError(retcode, cmd)
             error.output = stderr
             raise error
-        return output.decode('utf-8')
+        u8 = output.decode('utf-8')
+        if platform.system() == 'Windows':
+          return fix_windows_output(u8)
+        return u8
 
 
 class CodeSearchResultsGoToFileCommand(sublime_plugin.WindowCommand):
