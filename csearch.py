@@ -236,7 +236,7 @@ class CodeSearchResultsGoToFileCommand(sublime_plugin.WindowCommand):
                               sublime.ENCODED_POSITION)
         # TODO(pope): Consider highlighting the match
 
-class MouseEventProcessor(mouse_event_listener.MouseEventListener):
+class MouseEventProcessor(MouseEventListener):
     def on_pre_mouse_down(self, view, args):
         if not 'by' in args:
             return
