@@ -34,7 +34,7 @@ class CsearchCommand(sublime_plugin.WindowCommand, _CsearchListener):
     def __init__(self, *args, **kwargs):
         super(CsearchCommand, self).__init__(*args, **kwargs)
         self._is_running = False
-        self._last_search = ''
+        self._last_search = 'file:* case:yes "'
 
     def run(self, query=None):
         """Runs the search command.
@@ -136,12 +136,10 @@ class CsearchCommand(sublime_plugin.WindowCommand, _CsearchListener):
         view.set_read_only(True)
 
     def on_finished(self, output, err=None):
-        print('on_finished', output)
         matches = None
         if output:
             try:
                 matches = parser.parse_search_output(output)
-                print("matches", matches)
             except Exception as e:
                 err = e
         sublime.set_timeout(
@@ -242,7 +240,5 @@ class MouseEventProcessor(MouseEventListener):
             return
         if args['by'] != 'words':
             return
-        print("on pre-click > ", args)
+        # args['by'] == 'words' means we are hanling double click
         view.window().run_command("code_search_results_go_to_file")
-    # def on_post_mouse_down(self, point):
-        # print( "on post-click > ", point)
