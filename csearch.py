@@ -12,7 +12,6 @@ import threading
 
 from YetAnotherCodeSearch import parser
 from YetAnotherCodeSearch import settings
-from YetAnotherCodeSearch.mouse_event_listener import MouseEventListener
 
 
 class _CsearchListener(object):
@@ -229,16 +228,10 @@ class CodeSearchResultsGoToFileCommand(sublime_plugin.WindowCommand):
         i = bisect.bisect(matches, line)
         if line.contains(matches[i]):
             col = matches[i].a - line.a - 6  # 6 is the amount of padding
-
         self.window.open_file('{0}:{1}:{2}'.format(filename, linenum, col),
                               sublime.ENCODED_POSITION)
         # TODO(pope): Consider highlighting the match
 
-class MouseEventProcessor(MouseEventListener):
-    def on_pre_mouse_down(self, view, args):
-        if not 'by' in args:
-            return
-        if args['by'] != 'words':
-            return
-        # args['by'] == 'words' means we are hanling double click
-        view.window().run_command("code_search_results_go_to_file")
+class DoubleClickCallback(sublime_plugin.WindowCommand):
+    def run(self):
+        self.window.run_command("code_search_results_go_to_file")
