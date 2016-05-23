@@ -22,21 +22,24 @@ class Settings(object):
         cindex_path: The path to the cindex command.
         index_filename: An optional path to a csearchindex file.
         paths_to_index: An optional list of paths to index.
+        paths_to_exclude: An optional list of paths to exclude from index.
     """
 
     def __init__(self, csearch_path, cindex_path, index_filename=None,
-                 paths_to_index=None):
+                 paths_to_index=None, paths_to_exclude=None):
         self.csearch_path = csearch_path
         self.cindex_path = cindex_path
         self.index_filename = index_filename
         self.paths_to_index = paths_to_index or []
+        self.paths_to_exclude = paths_to_exclude or []
 
     def __eq__(self, other):
         return (isinstance(other, self.__class__) and
                 self.csearch_path == other.csearch_path and
                 self.cindex_path == other.cindex_path and
                 self.index_filename == other.index_filename and
-                self.paths_to_index == other.paths_to_index)
+                self.paths_to_index == other.paths_to_index and
+                self.paths_to_exclude == other.paths_to_exclude)
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -47,9 +50,10 @@ class Settings(object):
 
     def __repr__(self):
         s = ('{0}(csearch_path={1}; cindex_path={2}; index_filename={3};'
-             ' paths_to_index={4})')
+             ' paths_to_index={4}; paths_to_exclude={5})')
         return s.format(self.__class__, self.csearch_path, self.cindex_path,
-                        self.index_filename, self.paths_to_index)
+                        self.index_filename, self.paths_to_index,
+                        self.paths_to_exclude)
 
 
 def get_project_settings(project_data,
@@ -74,12 +78,16 @@ def get_project_settings(project_data,
     index_filename = None
     paths_to_index = []
     project_dir = None
+    paths_to_exclude = []
     if project_file_name:
         project_dir = os.path.dirname(project_file_name)
     if ('code_search' in project_data):
         if 'csearchindex' in project_data['code_search']:
             index_filename = fix_path(
                 project_data['code_search']['csearchindex'], project_dir)
+        if ('exclude' in project_data['code_search']) and index_project_folders:
+            paths_to_exclude = [fix_path(folder, project_dir)
+                                for folder in project_data['code_search']['exclude']]
 
     if index_project_folders:
         paths_to_index = [fix_path(folder['path'], project_dir)
@@ -87,4 +95,5 @@ def get_project_settings(project_data,
 
     return Settings(path_csearch, path_cindex,
                     index_filename=index_filename,
-                    paths_to_index=paths_to_index)
+                    paths_to_index=paths_to_index,
+                    paths_to_exclude=paths_to_exclude)

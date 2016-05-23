@@ -69,7 +69,8 @@ class CindexCommand(sublime_plugin.WindowCommand, _CindexListener):
             _CindexListThread(self,
                               path_cindex=s.cindex_path,
                               index_filename=s.index_filename,
-                              paths_to_index=s.paths_to_index).start()
+                              paths_to_index=s.paths_to_index,
+                              paths_to_exclude=s.paths_to_exclude).start()
         except Exception as e:
             self._finish(err=e)
 
@@ -101,7 +102,7 @@ class _CindexListThread(threading.Thread):
     """Runs the cindex command in a thread."""
 
     def __init__(self, listener, path_cindex='cindex', index_filename=None,
-                 paths_to_index=None):
+                 paths_to_index=None, paths_to_exclude=None):
         """Initializes the _CindexListThread.
 
         Args:
@@ -116,6 +117,7 @@ class _CindexListThread(threading.Thread):
         self._path_cindex = path_cindex
         self._index_filename = index_filename
         self._paths_to_index = paths_to_index or []
+        self._paths_to_exclude = paths_to_exclude or []
 
     def run(self):
         try:
@@ -142,6 +144,9 @@ class _CindexListThread(threading.Thread):
         cmd = [self._path_cindex, '-verbose']
         if self._paths_to_index:
             cmd.append('-reset')
+            for exclude in self._paths_to_exclude:
+               cmd.append('-exclude')
+               cmd.append(exclude)
             cmd.extend(self._paths_to_index)
         proc = self._get_proc(cmd)
         overall_start = time.perf_counter()
